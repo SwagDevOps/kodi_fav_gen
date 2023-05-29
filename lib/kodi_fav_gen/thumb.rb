@@ -16,8 +16,9 @@ class KodiFavGen::Thumb
   autoload(:Digest, 'digest')
 
   # @param [String] content as binary image file content or base64 encoded.
-  def initialize(content, base64: true)
+  def initialize(content, base64: true, tmpdir: nil)
     @content = base64 ? Base64.decode64(content) : content
+    @tmpdir = tmpdir || ::KodiFavGen::Tmpdir.new
 
     freeze
   end
@@ -37,18 +38,22 @@ class KodiFavGen::Thumb
   # @return [String]
   attr_reader :content
 
+  # @return [KodiFavGen::Tmpdir]
+  attr_reader :tmpdir
+
   # @return [String]
   def filename
     Digest::MD5.hexdigest(content)
   end
 
+  # @return [Pathname]
   def directory
-    {
-      progname: self.class.name.split('::').first,
-      uid: self.uid,
-    }.yield_self do |h|
-      self.tmpdir.join('%<progname>s.%<uid>s' % h)
-    end
+    tmpdir.configured? ? tmpdir.path : lambda do
+      {
+        progname: self.class.name.split('::').first,
+        uid: self.uid,
+      }.then { |h| self.tmpdir.join('%<progname>s.%<uid>s' % h) }
+    end.call
   end
 
   # @return [Module<FileUtils>]
@@ -60,13 +65,5 @@ class KodiFavGen::Thumb
   # @return [Integer]
   def uid
     ::Process.euid
-  end
-
-  # @return [Pathname]
-  def tmpdir
-    # noinspection RubyResolve
-    require('tmpdir').yield_self do
-      ::Dir.tmpdir.yield_self { |v| Pathname.new(v).realpath }
-    end
   end
 end
