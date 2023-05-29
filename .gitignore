@@ -2,7 +2,7 @@
 *.swp
 *~
 /**/.*
-/samples/
+/sample/
 /doc/
 /vendor/
 !/.gitignore
