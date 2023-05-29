@@ -16,6 +16,7 @@ module KodiFavGen
       Output: :output,
       Template: :template,
       Thumb: :thumb,
+      Tmpdir: :tmpdir,
     }.each do |k, v|
       autoload(k, "#{path}/#{v}")
     end
