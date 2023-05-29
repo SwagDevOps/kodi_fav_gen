@@ -1,0 +1,11 @@
+*.gem
+*.swp
+*~
+/**/.*
+/samples/
+/doc/
+/vendor/
+!/.gitignore
+!/.rspec
+!/.rubocop.yml
+!/.yardopts
