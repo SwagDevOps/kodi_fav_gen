@@ -23,7 +23,9 @@ class KodiFavGen::Template
 </favourites><%= "\n" -%>}
 
   # @param [KodiFavGen::Glob] glob
-  def initialize(glob = nil)
+  # @param [KodiFavGen::Config] config
+  def initialize(glob = nil, config: nil)
+    @config = config || ::KodiFavGen::Config.new
     (glob || ::KodiFavGen::Glob.new).tap do |v|
       @path = v.path
     end.call.yield_self do |v|
@@ -54,6 +56,9 @@ class KodiFavGen::Template
   # @return [Array<Struct>]
   attr_reader :items
 
+  # @return [KodiFavGen::Config]
+  attr_reader :config
+
   def itemize(glob)
     glob.map do |item|
       {
@@ -68,7 +73,7 @@ class KodiFavGen::Template
           return nil unless item['thumb']
 
           Pathname.new(item.fetch('thumb')).yield_self do |thumb|
-            (thumb.absolute? ? thumb : Pathname.new(path).join('thumbs').glob("#{thumb}.*").first).read.yield_self do |v|
+            (thumb.absolute? ? thumb : thumbs_directory.glob("#{thumb}.*").first).read.yield_self do |v|
               ::KodiFavGen::Thumb.new(v, base64: false).call.to_s
             end
           rescue StandardError => e
@@ -87,5 +92,16 @@ class KodiFavGen::Template
   # @raise [REXML::ParseException]
   def parse(xml)
     REXML::Document.new(xml)
+  end
+
+  # @param [String, Pathname] basedir
+  #
+  # @return [Pathname]
+  def thumbs_directory(basedir: nil)
+    config.get(:thumbs_directory)&.then do |cpath|
+      return Pathname.new(cpath).absolute? ? Pathname.new(cpath) : Pathname.new(path).join(cpath)
+    end
+
+    Pathname.new(basedir || path).join('..', 'thumbs')
   end
 end
