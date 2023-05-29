@@ -19,6 +19,20 @@ class KodiFavGen::Config
     ::ENV[key(name.to_s)]
   end
 
+  # @return [Hash{Symbol => Object}]
+  def to_h
+    ENV.map do |k, v|
+      if /^#{BASE_NAME}__/.match(k.to_s)
+        k.gsub(/^#{BASE_NAME}__/, '').downcase.to_sym.then do |key|
+          [
+            key,
+            self.get(key)
+          ]
+        end
+      end
+    end.compact.to_h
+  end
+
   class << self
     # @param [Array<String>] payload
     #
@@ -26,7 +40,7 @@ class KodiFavGen::Config
     def call(payload)
       payload.map(&:to_s).map do |data|
         parts = data.split('=')
-        [parts[0].to_s, parts[1..-1]&.join('=')].map(&:to_s).yield_self do |pair|
+        [parts[0].to_s.tr('-', '_'), parts[1..-1]&.join('=')].map(&:to_s).yield_self do |pair|
           self.set(*pair) unless pair.map(&:empty?).include?(true)
         end
       end.yield_self { self.new }
