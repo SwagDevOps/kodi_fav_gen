@@ -20,6 +20,20 @@ action: |
   656333633130326631656330346438343361313794752e&quot;,return)
 ```
 
+### Samples of use
+
+```shell
+# kodi-favgen directory='sample/favourites'
+# kodi-favgen directory='sample/favourites' output='/dev/stdout'
+# kodi-favgen directory='sample/favourites' thumbs-directory=../thumbs output='/dev/stdout'
+# kodi-favgen directory='sample/favourites' tmpdir=sample/cache/ output='/dev/stdout'
+```
+
+``thumbs-directory`` is relative to ``directory``, 
+unless the path is given as absolute.
+
+``tmpdir`` must be an absolute path.
+
 <!-- hyperlinks -->
 [wiki/favourites]: https://kodi.wiki/view/Favourites
 [wiki/favourites.xml]: https://kodi.wiki/view/Favourites.xml
