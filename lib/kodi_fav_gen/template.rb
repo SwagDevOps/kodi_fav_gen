@@ -29,7 +29,7 @@ class KodiFavGen::Template
     (glob || ::KodiFavGen::Glob.new).tap do |v|
       @path = v.path
     end.call.yield_self do |v|
-      @items = self.itemize(v)
+      @items = self.itemize(v).reject { |item| item.hidden }
     end
   end
 
@@ -65,6 +65,7 @@ class KodiFavGen::Template
         id: item.fetch('id'),
         name: item.fetch('name'),
         action: item.fetch('action').lines.map(&:chomp).join,
+        hidden: item['hidden'].then { |v| v === true ? true : false },
         thumb: lambda do
           item['thumb_b64']&.yield_self do |b64|
             return ::KodiFavGen::Thumb.new(b64.lines.map(&:chomp).join).call&.to_s
