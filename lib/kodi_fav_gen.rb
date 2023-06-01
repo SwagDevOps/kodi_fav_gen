@@ -8,7 +8,20 @@
 
 # Namespace module
 module KodiFavGen
-  File.realpath(__FILE__).gsub(/\.rb/, '').then do |path|
+  class << self
+    protected
+
+    # Denote given constant is already defined for the class.
+    #
+    # @api private
+    #
+    # @param [String, Symbol] constant
+    def has_constant?(constant)
+      self.constants.map(&:to_sym).include?(constant.to_sym)
+    end
+  end
+
+  File.realpath(__FILE__).gsub(/\.rb/, '').tap do |path|
     {
       App: :app,
       Config: :config,
@@ -20,6 +33,9 @@ module KodiFavGen
     }.each do |k, v|
       autoload(k, "#{path}/#{v}")
     end
+  end.tap do |path|
+    # @api private
+    ERB_PATH = "#{path}/erb" unless has_constant?(:ERB_PATH)
   end
 
   KodiFavGen::App.call if __FILE__ == $0

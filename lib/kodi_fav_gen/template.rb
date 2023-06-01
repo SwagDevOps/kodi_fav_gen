@@ -8,19 +8,22 @@
 
 require_relative('../kodi_fav_gen')
 
-# Template (rendering).
+# Template (rendering) for ``favourites.xml`` file.
 class KodiFavGen::Template
-  autoload(:ERB, 'erb')
   autoload(:REXML, 'rexml')
 
-  TEMPLATE = %{<?xml version="1.0" encoding="<%= ''.encoding.to_s %>"?>
-<favourites>
-  <%- @favourites.each do |favourite| -%>
-  <favourite id="<%= favourite.id %>"
-             name="<%= favourite.name %>"
-             thumb="<%= favourite.thumb %>"><%= favourite.action %>></favourite>
-  <%- end -%>
-</favourites><%= "\n" -%>}
+  File.realpath(__FILE__).gsub(/\.rb/, '').then do |path|
+    {
+      ErbFile: :erb_file,
+      File: :file,
+      String: :string,
+    }.each do |k, v|
+      autoload(k, "#{path}/#{v}")
+    end
+  end
+
+  # @api private
+  TEMPLATE = ::KodiFavGen::Template::ErbFile.new('main/favourites.xml').freeze
 
   # @param [KodiFavGen::Glob] glob
   # @param [KodiFavGen::Config] config
@@ -33,18 +36,18 @@ class KodiFavGen::Template
     end
   end
 
-  # Executes to produce a completed template, returning the results of that code.
-  #
-  # Result is parsed before returning, to ensure XML validity.
+  # Render template.
   #
   # @return [String]
   def call
-    Object.new.tap do |context|
-      context.instance_variable_set('@favourites', items)
-    end.yield_self do |context|
-      ERB.new(TEMPLATE, trim_mode: '->')
-         .result(context.instance_eval { binding })
-         .tap { |xml| self.parse(xml) }
+    {
+      favourites: items
+    }.then do |variables|
+      template.call(variables)
+    end.then do |xml|
+      self.prepare!(xml)
+    end.then do |document|
+      "#{document.to_s.strip}\n\n"
     end
   end
 
@@ -85,14 +88,21 @@ class KodiFavGen::Template
     end
   end
 
-  # Ensures given XML string is valid, raises error otherwise.
+  # Prepare and validate given xml.
   #
   # @param [String] xml
   #
   # @return [REXML::Document]
   # @raise [REXML::ParseException]
-  def parse(xml)
-    REXML::Document.new(xml)
+  def prepare!(xml)
+    builder = -> (markup) { REXML::Document.new(markup) }
+
+    [
+      builder.call("<?xml version='1.0' encoding='%s'?>\n" % ''.encoding),
+      builder.call(xml.strip),
+    ].then do |header, content|
+      header.tap { header.add(content) }
+    end
   end
 
   # @param [String, Pathname] basedir
@@ -104,5 +114,10 @@ class KodiFavGen::Template
     end
 
     Pathname.new(basedir || path).join('..', 'thumbs')
+  end
+
+  # @return [::KodiFavGen::Template::String]
+  def template
+    self.class::TEMPLATE
   end
 end
