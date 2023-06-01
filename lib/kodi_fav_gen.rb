@@ -23,6 +23,7 @@ module KodiFavGen
 
   File.realpath(__FILE__).gsub(/\.rb/, '').tap do |path|
     {
+      Actions: :actions,
       App: :app,
       Config: :config,
       Glob: :glob,
