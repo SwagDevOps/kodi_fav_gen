@@ -31,6 +31,7 @@ class KodiFavGen::Template::String
     Object.new.tap do |context|
       variables.each do |k, v|
         context.instance_variable_set("@#{k}", v)
+        context.singleton_class.__send__(:attr_reader, k.to_sym)
       end
     end.then do |context|
       ERB.new(self.to_s, trim_mode: '->')
