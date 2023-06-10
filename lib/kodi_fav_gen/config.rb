@@ -10,7 +10,8 @@ require_relative('../kodi_fav_gen')
 
 # Describe configuration (from environment).
 class KodiFavGen::Config
-  BASE_NAME = 'KODI_FAV'
+  # @api private
+  BASE_NAME = 'KODI_FAVGEN'
 
   # @param [Symbol]
   #
@@ -19,18 +20,18 @@ class KodiFavGen::Config
     ::ENV[key(name.to_s)]
   end
 
-  # @return [Hash{Symbol => Object}]
+  # @return [Hash{Symbol => String}]
   def to_h
-    ENV.map do |k, v|
-      if /^#{BASE_NAME}__/.match(k.to_s)
-        k.gsub(/^#{BASE_NAME}__/, '').downcase.to_sym.then do |key|
+    /^#{BASE_NAME}__/.then do |rule|
+      ENV.keys.keep_if { |k| rule.match(k.to_s) }.map do |k|
+        k.gsub(rule, '').downcase.to_sym.then do |key|
           [
             key,
             self.get(key)
           ]
         end
-      end
-    end.compact.to_h
+      end.compact.to_h
+    end
   end
 
   class << self
