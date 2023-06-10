@@ -26,6 +26,7 @@ module KodiFavGen
       Actions: :actions,
       App: :app,
       Config: :config,
+      Errors: :errors,
       Glob: :glob,
       Output: :output,
       Template: :template,
