@@ -28,8 +28,10 @@ class KodiFavGen::App
           halt("#{key} must be set", status: 22) if config.get(key).nil?
         end
 
-        ::KodiFavGen::Template.new.yield_self do |template|
+        ::KodiFavGen::Template.new.then do |template|
           ::KodiFavGen::Output.new(template).call
+        rescue ::KodiFavGen::Errors::GenerationError => e
+          halt("#{e.message}:\n\n#{e.history.to_json}", status: 74) # EBADMSG
         rescue REXML::ParseException => e
           halt(e.message, status: 125) # ECANCELED
         rescue ::StandardError => e
@@ -50,9 +52,9 @@ class KodiFavGen::App
     def halt(message, status: 1)
       if message&.is_a?(String) and message.to_s.strip != ''
         if status.to_i.zero?
-          warn(message)
-        else
           puts(message)
+        else
+          warn(message)
         end
       end
 

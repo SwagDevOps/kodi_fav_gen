@@ -29,16 +29,14 @@ class KodiFavGen::Template
   # @param [KodiFavGen::Config] config
   def initialize(glob = nil, config: nil)
     @config = config || ::KodiFavGen::Config.new
-    (glob ||= ::KodiFavGen::Glob.new).tap do |v|
-      @items = glob.call.reject { |item| item.hidden }
-    end
+    @glob = glob || ::KodiFavGen::Glob.new
 
     freeze
   end
 
   # Render template.
   #
-  # @return [String]
+  # @return [Struct]
   def call
     {
       favourites: items
@@ -47,14 +45,19 @@ class KodiFavGen::Template
     end.then do |xml|
       self.prepare!(xml)
     end.then do |document|
-      "#{document.to_s.strip}\n\n"
+      {
+        output: "#{document.to_s.strip}\n\n",
+        errors: @glob.errors,
+      }.then { |v| ::Struct.new(*v.keys, keyword_init: true).new(v) }
     end
   end
 
   protected
 
   # @return [Array<Struct>]
-  attr_reader :items
+  def items
+    @glob.call.reject { |item| item.hidden }
+  end
 
   # Prepare and validate given xml.
   #

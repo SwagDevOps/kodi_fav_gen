@@ -26,7 +26,15 @@ class KodiFavGen::Output
   # @return [Pathname]
   def call
     self.file.tap do |file|
-      file.write(subject.call)
+      subject.call.then do |result|
+        file.write(result.output)
+
+        unless result.errors.to_h.empty?
+          ::KodiFavGen::Errors::GenerationError.new(nil, history: result.errors).then do |e|
+            raise(e)
+          end
+        end
+      end
     end
   end
 
