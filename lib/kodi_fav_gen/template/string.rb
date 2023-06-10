@@ -7,6 +7,7 @@
 # There is NO WARRANTY, to the extent permitted by law.
 
 require_relative('../template')
+require_relative('context')
 
 # Template (rendering) from a string.
 #
@@ -28,14 +29,8 @@ class KodiFavGen::Template::String
 
   # @return [String]
   def call(variables = {})
-    Object.new.tap do |context|
-      variables.each do |k, v|
-        context.instance_variable_set("@#{k}", v)
-        context.singleton_class.__send__(:attr_reader, k.to_sym)
-      end
-    end.then do |context|
-      ERB.new(self.to_s, trim_mode: '->')
-         .result(context.instance_eval { binding })
+    make_context(variables).then do |context|
+      ERB.new(self.to_s, trim_mode: '->').result(context.instance_eval { binding })
     end
   end
 
@@ -43,4 +38,11 @@ class KodiFavGen::Template::String
 
   # @return [String]
   attr_reader :template
+
+  # @param [Hash{Symbol => Object}] variables
+  #
+  # @return [KodiFavGen::Template::Context]
+  def make_context(variables)
+    ::KodiFavGen::Template::Context.new(variables)
+  end
 end
