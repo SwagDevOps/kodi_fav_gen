@@ -20,6 +20,23 @@ action: |
   656333633130326631656330346438343361313794752e&quot;,return)
 ```
 
+Favourites support actions with a more concise (DRY) and declarative syntax.
+Example with ``activate_window`` (as seen above):
+
+```yaml
+---
+name: France 2
+thumb: france2
+action:
+  type: activate_window
+  value: |
+    plugin://plugin.video.catchuptvandmore/resources/lib/channels/fr/francetv/channel_homepage/
+    ?_pickle_=800595b8000000000000007d94288c075f7469746c655f948c2554c3a96cc3a9766973696f6e2064652072617474726170616765202d
+    204672616e63652032948c065f617267735f945d948c116368616e6e656c732f6672616e63652d3294618c0b69735f706c617961626c6594898c09
+    69735f666f6c64657294888c056f72646572944b028c0866726f6d5f66617694888c096974656d5f68617368948c20333063646533613030343561
+    656333633130326631656330346438343361313794752e
+```
+
 ### Samples of use
 
 ```shell
