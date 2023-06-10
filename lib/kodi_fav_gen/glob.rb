@@ -13,18 +13,36 @@ class KodiFavGen::Glob
   autoload(:Pathname, 'pathname')
   autoload(:YAML, 'yaml')
 
+  File.realpath(__FILE__).gsub(/\.rb/, '').then do |path|
+    {
+      Favourite: :favourite,
+    }.each do |k, v|
+      autoload(k, "#{path}/#{v}")
+    end
+  end
+
   # @param [String] path
   # @param [KodiFavGen::Config] config
   def initialize(path = nil, config: nil)
     self.tap do
       @config = config || ::KodiFavGen::Config.new
       @path = Pathname.new(path || self.config.get(:directory)).realpath.freeze
+      @errors = {}
     end.freeze
   end
 
   # @return [Array<Struct}>]
   def call
     self.glob.map { |item| self.itemize(item) }
+  end
+
+  # Get errors encountered during glob and favourites generation.
+  #
+  # @see #store_error
+  #
+  # @return [Hash{Symbol => Array<Exception>}]
+  def errors
+    @errors.dup
   end
 
   protected
@@ -37,13 +55,20 @@ class KodiFavGen::Glob
 
   # @return [Array<Hash{String => Object}>]
   def glob
-    'yml'.then do |ext|
-      self.path.glob("*.#{ext}").sort.map do |file|
-        YAML.safe_load(file.read).then do |h|
-          { 'id' => file.basename(".#{ext}").to_s }.merge(h)
+    self.path.glob(%w[*.yml *.yml.erb]).map do |file|
+      [
+        file.basename.to_s.gsub(/\.yml(\.erb)?$/, '').to_sym,
+        file
+      ]
+    end.to_h.values.sort.then do |files|
+      files.map do |file|
+        Favourite.new(file).then do |favourite|
+          favourite.call
+        rescue StandardError => error
+          store_error(favourite.id, error)
         end
       end
-    end
+    end.compact
   end
 
   # Transform given ``Hash`` into ``Struct``.
@@ -67,11 +92,9 @@ class KodiFavGen::Glob
         return nil unless data['thumb']
 
         Pathname.new(data.fetch('thumb')).then do |thumb|
-          (thumb.absolute? ? thumb : thumbs_directory.glob("#{thumb}.*").first).read.then do |v|
-            ::KodiFavGen::Thumb.new(v, base64: false).call.to_s
-          end
-        rescue StandardError => e
-          warn("#{e.message} for #{data['id'].inspect}").then { nil }
+          ::KodiFavGen::Thumb.new(read_thumb(thumb), base64: false).call.to_s
+        rescue StandardError => error
+          store_error(data.fetch('id'), error)
         end
       end.call
     }.then { |v| Struct.new(*v.keys, keyword_init: true).new(v) }
@@ -100,6 +123,30 @@ class KodiFavGen::Glob
     end
   end
 
+  # Match thumb
+  #
+  # @param [Pathname] thumb pattern
+  #
+  # @return [Pathname]
+  def match_thumb(thumb)
+    return thumb if thumb.file?
+
+    (thumb.absolute? ? thumb.glob('.*') : thumbs_directory.glob("#{thumb}.*")).first.tap do |v|
+      if v.nil?
+        "Can not match any thumbnail file as #{thumb}"
+          .then { |msg| ::KodiFavGen::Errors::MissingFileError.new(msg) }
+          .then { |error| raise(error) }
+      end
+    end
+  end
+
+  # @param [Pathname] thumb pattern
+  #
+  # @return [String]
+  def read_thumb(thumb)
+    match_thumb(thumb).read
+  end
+
   # @param [String, Pathname] basedir
   #
   # @return [Pathname]
@@ -109,5 +156,15 @@ class KodiFavGen::Glob
     end
 
     Pathname.new(basedir || path).join('..', 'thumbs')
+  end
+
+  # @param [String, Symbol] id
+  # @param [StandardError] error
+  #
+  # @return [nil]
+  def store_error(id, error)
+    nil.tap do
+      @errors[id.to_sym] = (@errors[id.to_sym] || []).concat([error])
+    end
   end
 end
