@@ -12,18 +12,22 @@ require_relative('../kodi_fav_gen')
 #
 # Samples of use
 # ```shell
-# kodi-favgen directory='samples'
-# kodi-favgen directory='samples' output='/dev/stdout'
+# kodi-favgen path='samples'
+# kodi-favgen path='samples' output='/dev/stdout'
 # ```
 class KodiFavGen::App
   autoload(:REXML, 'rexml')
 
   class << self
+    # Mandatory parameters.
+    #
     # @api private
-    MANDATORY_PARAMS = [:directory]
+    MANDATORY_PARAMS = [:path]
 
-    def call(argv = nil)
-      ::KodiFavGen::Config.call(argv || ARGV.dup).yield_self do |config|
+    # @param [Array<String>] argv
+    # @param [Hash{String, Symbol => String}] defaults
+    def call(argv = nil, defaults = {})
+      ::KodiFavGen::Config.call((argv || ARGV).dup, defaults.to_h.dup).then do |config|
         MANDATORY_PARAMS.each do |key|
           halt("#{key} must be set", status: 22) if config.get(key).nil?
         end

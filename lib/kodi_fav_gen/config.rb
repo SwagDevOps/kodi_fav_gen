@@ -36,22 +36,45 @@ class KodiFavGen::Config
 
   class << self
     # @param [Array<String>] payload
+    # @param [Hash{String, Symbol => String}]
     #
     # @return [KodiFavGen::Config]
-    def call(payload)
+    def call(payload, defaults = {})
+      defaults.transform_keys(&:to_s).map do |key, value|
+        self.prepare(key, value)
+      end
+
       payload.map(&:to_s).map do |data|
         parts = data.split('=')
-        [parts[0].to_s.tr('-', '_'), parts[1..-1]&.join('=')].map(&:to_s).yield_self do |pair|
+        [parts[0].to_s.tr('-', '_'), parts[1..-1]&.join('=')].map(&:to_s).then do |pair|
           self.set(*pair) unless pair.map(&:empty?).include?(true)
         end
-      end.yield_self { self.new }
+      end.then { self.new }
     end
 
     protected
 
+    # Set value for given key when value is not already set.
+    #
+    # @param [String] key
+    # @param [String] value
+    #
+    # @return [String, nil]
+    def prepare(key, value)
+      self.key(key).then do |env_key|
+        ::ENV[env_key] = value.to_s unless ::ENV.key?(env_key)
+      end
+    end
+
+    # Set value for given key.
+    #
+    # @param [String] key
+    # @param [String] value
+    #
+    # @return [String, nil]
     def set(key, value)
-      self.key(key).yield_self do |env_key|
-        ::ENV[env_key] = value unless value.to_s.empty?
+      self.key(key).then do |env_key|
+        ::ENV[env_key] = value.to_s unless value.to_s.empty?
       end
     end
 
