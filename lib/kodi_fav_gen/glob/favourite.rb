@@ -10,12 +10,12 @@ require_relative('../glob')
 
 # Read favourite file as YAML (or ERB flavored YAML file).
 #
-# File can use ERB template syntax, when using ``.erb.yml`` extension.
+# File can use ERB template syntax, when using ``.yml.erb`` extension.
 # ``variables`` are retrieved (as is) from Env Config.
 #
 # Declare a variable in environment:
 # <code>
-# export KODI_FAVGEN__FILES_PATH=/home/john_doe/Public/
+# export KODI_FAVGEN__FILES_PATH='/home/john_doe/Public'
 # </code>
 #
 # Use the variable in a YAML favourite file:
