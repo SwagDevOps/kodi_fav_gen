@@ -11,11 +11,11 @@ require_relative('../glob')
 # Read favourite file as YAML (or ERB flavored YAML file).
 #
 # File can use ERB template syntax, when using ``.erb.yml`` extension.
-# ``variables`` are retrieved from Env Config using ``VAR_`` prefix.
+# ``variables`` are retrieved (as is) from Env Config.
 #
 # Declare a variable in environment:
 # <code>
-# export KODI_FAVGEN__VAR__FILES_PATH=/home/john_doe/Public/
+# export KODI_FAVGEN__FILES_PATH=/home/john_doe/Public/
 # </code>
 #
 # Use the variable in a YAML favourite file:
@@ -30,9 +30,6 @@ require_relative('../glob')
 class KodiFavGen::Glob::Favourite
   autoload(:Pathname, 'pathname')
   autoload(:YAML, 'yaml')
-
-  # @api private
-  VAR_PREFIX = 'var__'
 
   class << self
     # Read (given) favourite file.
@@ -100,20 +97,10 @@ class KodiFavGen::Glob::Favourite
   #
   # @return [Hash{Symbol => String}]
   def variables
-    self.config.to_h.keep_if do |k, _|
-      %r{^#{var_prefix}[a-z]+}.match(k.to_s)
-    end.map do |k, v|
-      [
-        k.to_s.gsub(%r{^#{var_prefix}}, '').to_sym,
-        v.to_s.freeze,
-      ]
-    end.to_h
-  end
-
-  # Get prefix used for variables.
-  #
-  # @return [String]
-  def var_prefix
-    self.class::VAR_PREFIX
+    self.config
+        .to_h
+        .map { |k, v| [k.dup.to_sym.freeze, v.dup.freeze] }
+        .to_h
+        .freeze
   end
 end
