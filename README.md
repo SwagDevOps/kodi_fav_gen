@@ -1,10 +1,10 @@
 ## Simple favourites generator for kodi
 
-[Favourites][wiki/favourites] can be edited directly 
-in the [``favourites.xml``][wiki/favourites.xml] file 
+[Favourites][wiki/favourites] can be edited directly
+in the [``favourites.xml``][wiki/favourites.xml] file
 in the [``userdata``][wiki/userdata] folder.
-``kodi-favgen`` provides a solution to generate ``favourites.xml`` files 
-from small (and clean) YAML files. 
+``kodi-favgen`` provides a solution to generate ``favourites.xml`` files
+from small (and clean) YAML files.
 
 ### Sample favourite YAML file
 
@@ -40,18 +40,54 @@ action:
 ### Samples of use
 
 ```shell
-# kodi-favgen directory='sample/favourites'
-# kodi-favgen directory='sample/favourites' output='/dev/stdout'
-# kodi-favgen directory='sample/favourites' thumbs-directory=../thumbs output='/dev/stdout'
-# kodi-favgen directory='sample/favourites' tmpdir=sample/cache/ output='/dev/stdout'
+# kodi-favgen path='sample/favourites'
+# kodi-favgen path='sample/favourites' output='/dev/stdout'
+# kodi-favgen path='sample/favourites' thumbs-path=../thumbs output='/dev/stdout'
+# kodi-favgen path='sample/favourites' tmpdir=sample/cache/ output='/dev/stdout'
 ```
 
-``thumbs-directory`` is relative to ``directory``, 
-unless the path is given as absolute.
+## Variables
 
-``tmpdir`` must be an absolute path.
+| key           | defaults                          | description                                                                                                                                                                                                            |
+|---------------|-----------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `path`        | __MUST BE SET__                   | path to favourites files                                                                                                                                                                                               |
+| `thumbs-path` | `#{path}/../thumbs`               | ``thumbs-path`` is relative to ``path`` unless the path is given as absolute.                                                                                                                                          |
+| `output`      | `'.kodi/userdata/favourites.xml'` | [``favourites.xml``][wiki/favourites.xml] file in the [``userdata``][wiki/userdata] folder                                                                                                                             |
+| `tmpdir`      | `ENV[TMPDIR] \|\| ::Dir.tmpdir`   | [``TMPDIR``][wikipedia/tmpdir] is the canonical environment variable in Unix and POSIX that should be used to specify a temporary directory (see [The Open Group Base Specifications][opengroup/directory_structure]). |
+
+### Using variables in favourite files
+
+File can use ERB template syntax, when using ``.yml.erb`` extension.
+``variables`` are retrieved (as is) from Env Config.
+
+Declare a variable in environment:
+
+```shell
+export KODI_FAVGEN__FILES_PATH='/home/john_doe/Public'
+```
+
+Or use the CLI parameters:
+
+```shell
+kodi-favgen path='sample/favourites' files-path='/home/john_doe/Public'
+```
+
+Retrieve and use the variable(s) in a YAML favourite file:
+
+```yaml
+# 000_files.yml.erb
+name: Files
+thumb: files
+action:
+  type: activate_window
+  value: <%= files_path.inspect %>
+```
 
 <!-- hyperlinks -->
+
 [wiki/favourites]: https://kodi.wiki/view/Favourites
 [wiki/favourites.xml]: https://kodi.wiki/view/Favourites.xml
 [wiki/userdata]: https://kodi.wiki/view/Userdata
+[wikipedia/tmpdir]: https://en.wikipedia.org/wiki/TMPDIR
+[opengroup/directory_structure]: https://pubs.opengroup.org/onlinepubs/9699919799/xrat/V4_xbd_chap10.html
+[ruby/erb]: https://github.com/ruby/erb
