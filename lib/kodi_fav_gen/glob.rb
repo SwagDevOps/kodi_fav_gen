@@ -26,7 +26,7 @@ class KodiFavGen::Glob
   def initialize(path = nil, config: nil)
     self.tap do
       @config = config || ::KodiFavGen::Config.new
-      @path = Pathname.new(path || self.config.get(:directory)).realpath.freeze
+      @path = Pathname.new(path || self.config.get(:path)).realpath.freeze
       @errors = {}
     end.freeze
   end
@@ -151,7 +151,7 @@ class KodiFavGen::Glob
   #
   # @return [Pathname]
   def thumbs_directory(basedir: nil)
-    config.get(:thumbs_directory)&.then do |cpath|
+    config.get(:thumbs_path)&.then do |cpath|
       return Pathname.new(cpath).absolute? ? Pathname.new(cpath) : Pathname.new(path).join(cpath)
     end
 
