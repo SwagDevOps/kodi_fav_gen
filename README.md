@@ -40,20 +40,28 @@ action:
 ### Samples of use
 
 ```shell
-# kodi-favgen path='sample/favourites'
-# kodi-favgen path='sample/favourites' output='/dev/stdout'
-# kodi-favgen path='sample/favourites' thumbs-path=../thumbs output='/dev/stdout'
-# kodi-favgen path='sample/favourites' tmpdir=sample/cache/ output='/dev/stdout'
+# kodi-favgen generate path='sample/favourites'
+# kodi-favgen generate path='sample/favourites' output='/dev/stdout'
+# kodi-favgen generate path='sample/favourites' thumbs-path=../thumbs output='/dev/stdout'
+# kodi-favgen generate path='sample/favourites' tmpdir=sample/cache/ output='/dev/stdout'
 ```
+
+## Actions
+
+First argument is an action, available actions are:
+
+| action       | description               |
+|--------------|---------------------------|
+| ``generate`` | Generate a favourite file |
 
 ## Variables
 
-| key           | defaults                          | description                                                                                                                                                                                                            |
-|---------------|-----------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `path`        | __MUST BE SET__                   | path to favourites files                                                                                                                                                                                               |
-| `thumbs-path` | `#{path}/../thumbs`               | ``thumbs-path`` is relative to ``path`` unless the path is given as absolute.                                                                                                                                          |
-| `output`      | `'.kodi/userdata/favourites.xml'` | [``favourites.xml``][wiki/favourites.xml] file in the [``userdata``][wiki/userdata] folder                                                                                                                             |
-| `tmpdir`      | `ENV[TMPDIR] \|\| ::Dir.tmpdir`   | [``TMPDIR``][wikipedia/tmpdir] is the canonical environment variable in Unix and POSIX that should be used to specify a temporary directory (see [The Open Group Base Specifications][opengroup/directory_structure]). |
+| key           | defaults                                                        | action(s)    | description                                                                                                                                                                                                            | example                                   |
+|---------------|-----------------------------------------------------------------|--------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
+| `path`        | __MUST BE SET__                                                 | ``generate`` | path to favourites files                                                                                                                                                                                               |                                           |
+| `thumbs-path` | `#{path}/../thumbs`                                             | ``generate`` | ``thumbs-path`` is relative to ``path`` unless the path is given as absolute.                                                                                                                                          |                                           |
+| `output`      | `'.kodi/userdata/favourites.xml'`                               | ``generate`` | [``favourites.xml``][wiki/favourites.xml] file in the [``userdata``][wiki/userdata] folder                                                                                                                             | ``${HOME}/.kodi/userdata/favourites.xml`` |
+| `tmpdir`      | `"#{ENV[TMPDIR] \|\| ::Dir.tmpdir}/KodiFavGen.#{Process.euid}"` | ``generate`` | [``TMPDIR``][wikipedia/tmpdir] is the canonical environment variable in Unix and POSIX that should be used to specify a temporary directory (see [The Open Group Base Specifications][opengroup/directory_structure]). | ``/tmp/KodiFavGen.1000``                  |
 
 ### Using variables in favourite files
 

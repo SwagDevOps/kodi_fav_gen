@@ -16,53 +16,21 @@ require_relative('../kodi_fav_gen')
 # kodi-favgen path='samples' output='/dev/stdout'
 # ```
 class KodiFavGen::App
-  autoload(:REXML, 'rexml')
+  ::File.realpath(__FILE__).gsub(/\.rb/, '').then do |path|
+    {
+      Actions: :actions,
+    }.each do |k, v|
+      autoload(k, "#{path}/#{v}")
+    end
+  end
 
   class << self
-    # Mandatory parameters.
-    #
-    # @api private
-    MANDATORY_PARAMS = [:path]
-
     # @param [Array<String>] argv
     # @param [Hash{String, Symbol => String}] defaults
     def call(argv = nil, defaults = {})
-      ::KodiFavGen::Config.call((argv || ARGV).dup, defaults.to_h.dup).then do |config|
-        MANDATORY_PARAMS.each do |key|
-          halt("#{key} must be set", status: 22) if config.get(key).nil?
-        end
-
-        ::KodiFavGen::Template.new.then do |template|
-          ::KodiFavGen::Output.new(template).call
-        rescue ::KodiFavGen::Errors::GenerationError => e
-          halt("#{e.message}:\n\n#{e.history.to_json}", status: 74) # EBADMSG
-        rescue REXML::ParseException => e
-          halt(e.message, status: 125) # ECANCELED
-        rescue ::StandardError => e
-          if e.class.name&.match(/^Errno::/) and e.class.constants.include?(:Errno)
-            # noinspection RubyMismatchedArgumentType
-            halt(e.message, status: e.class::Errno)
-          end
-
-          raise(e)
-        end
+      (argv || ARGV).fetch(0).then do |action_name|
+        ::KodiFavGen::App::Actions.call(action_name, argv, defaults).call
       end
-    end
-
-    protected
-
-    # @param [String, nil] message
-    # @param [Fixnum] status
-    def halt(message, status: 1)
-      if message&.is_a?(String) and message.to_s.strip != ''
-        if status.to_i.zero?
-          puts(message)
-        else
-          warn(message)
-        end
-      end
-
-      exit(status.to_i)
     end
   end
 end
