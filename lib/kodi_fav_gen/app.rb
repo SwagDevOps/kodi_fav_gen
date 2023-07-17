@@ -12,24 +12,30 @@ require_relative('../kodi_fav_gen')
 #
 # Samples of use
 # ```shell
-# kodi-favgen directory='samples'
-# kodi-favgen directory='samples' output='/dev/stdout'
+# kodi-favgen path='samples'
+# kodi-favgen path='samples' output='/dev/stdout'
 # ```
 class KodiFavGen::App
   autoload(:REXML, 'rexml')
 
   class << self
+    # Mandatory parameters.
+    #
     # @api private
-    MANDATORY_PARAMS = [:directory]
+    MANDATORY_PARAMS = [:path]
 
-    def call(argv = nil)
-      ::KodiFavGen::Config.call(argv || ARGV.dup).yield_self do |config|
+    # @param [Array<String>] argv
+    # @param [Hash{String, Symbol => String}] defaults
+    def call(argv = nil, defaults = {})
+      ::KodiFavGen::Config.call((argv || ARGV).dup, defaults.to_h.dup).then do |config|
         MANDATORY_PARAMS.each do |key|
           halt("#{key} must be set", status: 22) if config.get(key).nil?
         end
 
-        ::KodiFavGen::Template.new.yield_self do |template|
+        ::KodiFavGen::Template.new.then do |template|
           ::KodiFavGen::Output.new(template).call
+        rescue ::KodiFavGen::Errors::GenerationError => e
+          halt("#{e.message}:\n\n#{e.history.to_json}", status: 74) # EBADMSG
         rescue REXML::ParseException => e
           halt(e.message, status: 125) # ECANCELED
         rescue ::StandardError => e
@@ -50,9 +56,9 @@ class KodiFavGen::App
     def halt(message, status: 1)
       if message&.is_a?(String) and message.to_s.strip != ''
         if status.to_i.zero?
-          warn(message)
-        else
           puts(message)
+        else
+          warn(message)
         end
       end
 

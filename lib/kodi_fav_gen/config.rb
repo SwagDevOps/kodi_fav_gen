@@ -10,7 +10,8 @@ require_relative('../kodi_fav_gen')
 
 # Describe configuration (from environment).
 class KodiFavGen::Config
-  BASE_NAME = 'KODI_FAV'
+  # @api private
+  BASE_NAME = 'KODI_FAVGEN'
 
   # @param [Symbol]
   #
@@ -19,38 +20,61 @@ class KodiFavGen::Config
     ::ENV[key(name.to_s)]
   end
 
-  # @return [Hash{Symbol => Object}]
+  # @return [Hash{Symbol => String}]
   def to_h
-    ENV.map do |k, v|
-      if /^#{BASE_NAME}__/.match(k.to_s)
-        k.gsub(/^#{BASE_NAME}__/, '').downcase.to_sym.then do |key|
+    /^#{BASE_NAME}__/.then do |rule|
+      ENV.keys.keep_if { |k| rule.match(k.to_s) }.map do |k|
+        k.gsub(rule, '').downcase.to_sym.then do |key|
           [
             key,
             self.get(key)
           ]
         end
-      end
-    end.compact.to_h
+      end.compact.to_h
+    end
   end
 
   class << self
     # @param [Array<String>] payload
+    # @param [Hash{String, Symbol => String}]
     #
     # @return [KodiFavGen::Config]
-    def call(payload)
+    def call(payload, defaults = {})
+      defaults.transform_keys(&:to_s).map do |key, value|
+        self.prepare(key, value)
+      end
+
       payload.map(&:to_s).map do |data|
         parts = data.split('=')
-        [parts[0].to_s.tr('-', '_'), parts[1..-1]&.join('=')].map(&:to_s).yield_self do |pair|
+        [parts[0].to_s.tr('-', '_'), parts[1..-1]&.join('=')].map(&:to_s).then do |pair|
           self.set(*pair) unless pair.map(&:empty?).include?(true)
         end
-      end.yield_self { self.new }
+      end.then { self.new }
     end
 
     protected
 
+    # Set value for given key when value is not already set.
+    #
+    # @param [String] key
+    # @param [String] value
+    #
+    # @return [String, nil]
+    def prepare(key, value)
+      self.key(key).then do |env_key|
+        ::ENV[env_key] = value.to_s unless ::ENV.key?(env_key)
+      end
+    end
+
+    # Set value for given key.
+    #
+    # @param [String] key
+    # @param [String] value
+    #
+    # @return [String, nil]
     def set(key, value)
-      self.key(key).yield_self do |env_key|
-        ::ENV[env_key] = value unless value.to_s.empty?
+      self.key(key).then do |env_key|
+        ::ENV[env_key] = value.to_s unless value.to_s.empty?
       end
     end
 

@@ -1,0 +1,9 @@
+<favourites>
+    <%- # noinspection RubyResolve
+        # @type [Struct] favourite
+        favourites.each do |favourite| -%>
+        <favourite id="<%= favourite.id %>" name="<%= favourite.name %>" thumb="<%= favourite.thumb %>">
+            <%= favourite.action %>
+        </favourite>
+    <%- end -%>
+</favourites>
