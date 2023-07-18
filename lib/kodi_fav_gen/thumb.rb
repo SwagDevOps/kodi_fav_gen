@@ -9,6 +9,8 @@
 require_relative('../kodi_fav_gen')
 
 # Image processing.
+#
+# Create a new file from given contents (as filepath or base64 contents).
 class KodiFavGen::Thumb
   autoload(:Pathname, 'pathname')
   autoload(:FileUtils, 'fileutils')
@@ -16,16 +18,18 @@ class KodiFavGen::Thumb
   autoload(:Digest, 'digest')
 
   # @param [String] content as binary image file content or base64 encoded.
-  def initialize(content, base64: true, tmpdir: nil)
+  def initialize(content, base64: true, config: nil)
     @content = base64 ? Base64.decode64(content) : content
-    @tmpdir = tmpdir || ::KodiFavGen::Tmpdir.new
+    @config = config || ::KodiFavGen::Config.new
 
     freeze
   end
 
+  # Create a new file.
+  #
   # @return [Pathname]
   def call
-    self.directory.yield_self do |dir|
+    self.cache_path.then do |dir|
       fs.mkdir_p(dir.to_s) unless dir.directory?
       dir.join(filename).tap do |file|
         file.write(content) unless file.exist?
@@ -38,8 +42,8 @@ class KodiFavGen::Thumb
   # @return [String]
   attr_reader :content
 
-  # @return [KodiFavGen::Tmpdir]
-  attr_reader :tmpdir
+  # @return [KodiFavGen::Config]
+  attr_reader :config
 
   # @return [String]
   def filename
@@ -47,23 +51,13 @@ class KodiFavGen::Thumb
   end
 
   # @return [Pathname]
-  def directory
-    tmpdir.configured? ? tmpdir.path : lambda do
-      {
-        progname: self.class.name.split('::').first,
-        uid: self.uid,
-      }.then { |h| self.tmpdir.join('%<progname>s.%<uid>s' % h) }
-    end.call
+  def cache_path
+    config.get(:tmpdir, exception: true) { Pathname.new(_1) }
   end
 
   # @return [Module<FileUtils>]
   def fs
     # noinspection RubyResolve
     FileUtils
-  end
-
-  # @return [Integer]
-  def uid
-    ::Process.euid
   end
 end

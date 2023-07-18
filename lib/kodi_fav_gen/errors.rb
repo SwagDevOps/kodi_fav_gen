@@ -14,10 +14,11 @@ module KodiFavGen::Errors
   module Error
   end
 
-  File.realpath(__FILE__).gsub(/\.rb/, '').then do |path|
+  ::File.realpath(__FILE__).gsub(/\.rb$/, '').then do |path|
     {
       GenerationError: :generation_error,
       MissingFileError: :missing_file_error,
+      MissingParameterError: :missing_parameter_error
     }.each do |k, v|
       autoload(k, "#{path}/#{v}")
 

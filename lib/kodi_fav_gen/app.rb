@@ -16,7 +16,7 @@ require_relative('../kodi_fav_gen')
 # kodi-favgen path='samples' output='/dev/stdout'
 # ```
 class KodiFavGen::App
-  ::File.realpath(__FILE__).gsub(/\.rb/, '').then do |path|
+  ::File.realpath(__FILE__).gsub(/\.rb$/, '').then do |path|
     {
       Actions: :actions,
     }.each do |k, v|
@@ -25,12 +25,16 @@ class KodiFavGen::App
   end
 
   class << self
+    include(::KodiFavGen::Concerns::Halt)
+
     # @param [Array<String>] argv
     # @param [Hash{String, Symbol => String}] defaults
     def call(argv = nil, defaults = {})
       (argv || ARGV).fetch(0).then do |action_name|
         ::KodiFavGen::App::Actions.call(action_name, argv, defaults).call
       end
+    rescue ::KodiFavGen::Errors::MissingParameterError => e
+      halt("#{e.key} must be set", status: 22)
     end
   end
 end

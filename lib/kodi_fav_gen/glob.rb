@@ -13,7 +13,7 @@ class KodiFavGen::Glob
   autoload(:Pathname, 'pathname')
   autoload(:YAML, 'yaml')
 
-  File.realpath(__FILE__).gsub(/\.rb/, '').then do |path|
+  ::File.realpath(__FILE__).gsub(/\.rb$/, '').then do |path|
     {
       Favourite: :favourite,
     }.each do |k, v|
@@ -42,7 +42,7 @@ class KodiFavGen::Glob
   #
   # @return [Hash{Symbol => Array<Exception>}]
   def errors
-    @errors.dup
+    @errors.dup.transform_values(&:freeze)
   end
 
   protected
@@ -131,7 +131,7 @@ class KodiFavGen::Glob
   def match_thumb(thumb)
     return thumb if thumb.file?
 
-    (thumb.absolute? ? thumb.glob('.*') : thumbs_directory.glob("#{thumb}.*")).first.tap do |v|
+    (thumb.absolute? ? thumb.glob('.*') : thumbs_path.glob("#{thumb}.*")).first.tap do |v|
       if v.nil?
         "Can not match any thumbnail file as #{thumb}"
           .then { |msg| ::KodiFavGen::Errors::MissingFileError.new(msg) }
@@ -147,15 +147,11 @@ class KodiFavGen::Glob
     match_thumb(thumb).read
   end
 
-  # @param [String, Pathname] basedir
+  # Path where thumbs are stored.
   #
   # @return [Pathname]
-  def thumbs_directory(basedir: nil)
-    config.get(:thumbs_path)&.then do |cpath|
-      return Pathname.new(cpath).absolute? ? Pathname.new(cpath) : Pathname.new(path).join(cpath)
-    end
-
-    Pathname.new(basedir || path).join('..', 'thumbs')
+  def thumbs_path
+    config.get(:thumbs_path, exception: true) { Pathname.new(_1) }
   end
 
   # @param [String, Symbol] id

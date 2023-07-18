@@ -21,7 +21,7 @@ module KodiFavGen
     end
   end
 
-  ::File.realpath(__FILE__).gsub(/\.rb/, '').tap do |path|
+  ::File.realpath(__FILE__).gsub(/\.rb$/, '').tap do |path|
     {
       Actions: :actions,
       App: :app,
@@ -32,7 +32,6 @@ module KodiFavGen
       Output: :output,
       Template: :template,
       Thumb: :thumb,
-      Tmpdir: :tmpdir,
     }.each do |k, v|
       autoload(k, "#{path}/#{v}")
     end

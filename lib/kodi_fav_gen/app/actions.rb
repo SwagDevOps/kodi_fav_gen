@@ -20,7 +20,7 @@ module KodiFavGen::App::Actions
     attr_accessor :actions
   end
 
-  ::File.realpath(__FILE__).gsub(/\.rb/, '').then do |path|
+  ::File.realpath(__FILE__).gsub(/\.rb$/, '').then do |path|
     {
       Generate: :generate,
       Config: :config,

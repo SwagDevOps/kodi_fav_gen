@@ -32,6 +32,6 @@ class KodiFavGen::App::Actions::Generate < KodiFavGen::App::Actions::Base
   end
 
   def mandatory_params
-    [:path]
+    [:path, :thumbs_path]
   end
 end

@@ -23,11 +23,9 @@ class KodiFavGen::App::Actions::Base
   end
 
   def call
-    mandatory_params.each do |key|
-      halt("#{key} must be set", status: 22) if config.get(key).nil?
-    end.then do
-      self.execute
-    end
+    mandatory_params
+      .each { |key| config.get(key, exception: true) }
+      .then { self.execute }
   end
 
   protected
