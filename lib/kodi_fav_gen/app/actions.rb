@@ -23,6 +23,7 @@ module KodiFavGen::App::Actions
   ::File.realpath(__FILE__).gsub(/\.rb/, '').then do |path|
     {
       Generate: :generate,
+      Config: :config,
     }.each do |k, v|
       autoload(k, "#{path}/#{v}")
 
