@@ -30,7 +30,7 @@ class KodiFavGen::Config
   # @param [Symbol] name
   # @param [Boolean] exception
   #
-  # @return [String, nil, Object]
+  # @return [Object, nil]
   def get(name, exception: false, &block)
     key(name.to_s).then { take(_1) }.tap do |v|
       if exception and v.nil?
