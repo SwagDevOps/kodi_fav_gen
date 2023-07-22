@@ -28,6 +28,7 @@ module KodiFavGen
       Concerns: :concerns,
       Config: :config,
       Errors: :errors,
+      Git: :git,
       Glob: :glob,
       Output: :output,
       Template: :template,
