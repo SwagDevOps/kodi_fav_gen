@@ -32,12 +32,13 @@ class KodiFavGen::Config
   #
   # @return [Object, nil]
   def get(name, exception: false, &block)
+    # @type [Object, nil] v
     key(name.to_s).then { take(_1) }.tap do |v|
       if exception and v.nil?
         raise ::KodiFavGen::Errors::MissingParameterError.from_key(name)
       end
-    end.then do
-      (block || -> (v) { v }).call(_1)
+    end.then do |v|
+      (block || -> (v) { v }).call(v)
     end
   end
 
