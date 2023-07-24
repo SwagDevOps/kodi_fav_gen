@@ -28,9 +28,7 @@
   end,
   tmpdir: proc do
     begin
-      ::ENV['TMPDIR'] || lambda do
-        require('tmpdir').then { ::Dir.tmpdir }
-      end.call
+      ::ENV['TMPDIR'] || (require('tmpdir').then { ::Dir.tmpdir })
     end.then { |tmpdir| Pathname.new(tmpdir) }.then do |tmpdir|
       {
         name: (self.is_a?(Class) ? self : self.class).name.split('::').first,
@@ -39,7 +37,9 @@
         tmpdir.join('%<name>s.%<euid>s' % h)
       end
     end
-  end
+  end,
+  update_path: nil, # MUST BE SET
+  update_branch: nil, # MUST BE SET
 }.tap do
   autoload(:Etc, 'etc')
   autoload(:Pathname, 'pathname')

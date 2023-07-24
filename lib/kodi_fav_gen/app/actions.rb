@@ -24,6 +24,7 @@ module KodiFavGen::App::Actions
     {
       Generate: :generate,
       Config: :config,
+      Update: :update,
     }.each do |k, v|
       autoload(k, "#{path}/#{v}")
 
