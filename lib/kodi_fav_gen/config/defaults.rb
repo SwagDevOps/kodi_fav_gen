@@ -15,31 +15,36 @@
 # @see KodiFavGen::Config.prepare
 
 {
-  path: nil, # MUST BE SET
+  path: nil,
+  # @type [Hash] config
   thumbs_path: lambda do |config|
     config.fetch(:path).then do |path|
       Pathname.new(path).join('..', 'thumbs') if path
     end
   end,
-  output: lambda do |_|
-    ENV.fetch('HOME', Etc.getpwnam(Etc.getlogin).dir)
-       .then { |home| Pathname.new(home) }
-       .then { |home| home.join('.kodi/userdata/favourites.xml') }
+  output: proc do
+    ::ENV.fetch('HOME') do
+      Etc.getpwuid(::Process.uid).dir
+      # @type [String] home_dir
+    end.to_s.then do |home_dir|
+      Pathname.new(home_dir).join('.kodi/userdata/favourites.xml')
+    end
   end,
   tmpdir: proc do
-    begin
-      ::ENV['TMPDIR'] || (require('tmpdir').then { ::Dir.tmpdir })
-    end.then { |tmpdir| Pathname.new(tmpdir) }.then do |tmpdir|
+    ::ENV.fetch('TMPDIR') do
+      require('tmpdir').then { ::Dir.tmpdir }
+      # @type [String] tmp_dir
+    end.to_s.then do |tmp_dir|
       {
         name: (self.is_a?(Class) ? self : self.class).name.split('::').first,
-        euid: ::Process.euid,
+        uid: ::Process.uid,
       }.then do |h|
-        tmpdir.join('%<name>s.%<euid>s' % h)
+        Pathname.new(tmp_dir).join('%<name>s.%<uid>s' % h)
       end
     end
   end,
-  update_path: nil, # MUST BE SET
-  update_branch: nil, # MUST BE SET
+  update_path: nil,
+  update_branch: nil,
 }.tap do
   autoload(:Etc, 'etc')
   autoload(:Pathname, 'pathname')
