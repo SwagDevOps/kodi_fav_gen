@@ -50,18 +50,29 @@ action:
 
 First argument is an action, available actions are:
 
-| action       | description               |
-|--------------|---------------------------|
-| ``generate`` | Generate a favourite file |
+| action       | description                                                                                                                    |
+|--------------|--------------------------------------------------------------------------------------------------------------------------------|
+| ``generate`` | Generate a favourites file.                                                                                                    |
+| ``config``   | Display ``config`` with values from [``defaults``][SwagDevOps/kodi_fav_gen/config/defaults.rb], environment and CLI arguments. |   
+| ``update``   | Update favourites using (`git`) version control, see: [``kodi_favourites``][SwagDevOps/kodi_favourites].                       |
 
 ## Variables
 
-| key           | defaults                                                        | action(s)    | description                                                                                                                                                                                                            | example                                   |
-|---------------|-----------------------------------------------------------------|--------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
-| `path`        | __MUST BE SET__                                                 | ``generate`` | path to favourites files                                                                                                                                                                                               |                                           |
-| `thumbs-path` | `#{path}/../thumbs`                                             | ``generate`` | ``thumbs-path`` is relative to ``path`` unless the path is given as absolute.                                                                                                                                          |                                           |
-| `output`      | `'.kodi/userdata/favourites.xml'`                               | ``generate`` | [``favourites.xml``][wiki/favourites.xml] file in the [``userdata``][wiki/userdata] folder                                                                                                                             | ``${HOME}/.kodi/userdata/favourites.xml`` |
-| `tmpdir`      | `"#{ENV[TMPDIR] \|\| ::Dir.tmpdir}/KodiFavGen.#{Process.euid}"` | ``generate`` | [``TMPDIR``][wikipedia/tmpdir] is the canonical environment variable in Unix and POSIX that should be used to specify a temporary directory (see [The Open Group Base Specifications][opengroup/directory_structure]). | ``/tmp/KodiFavGen.1000``                  |
+### ``generate``
+
+| key           | defaults                                                       | description                                                                                                                                                                                                            | example                                         |
+|---------------|----------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------|
+| `path`        | __MUST BE SET__                                                | path to favourites files                                                                                                                                                                                               | ``${HOME}/.local/share/kodi_favgen/favourites`` |
+| `thumbs-path` | `#{path}/../thumbs`                                            | ``thumbs-path`` is relative to ``path`` unless the path is given as absolute.                                                                                                                                          |                                                 |
+| `output`      | `'.kodi/userdata/favourites.xml'`                              | [``favourites.xml``][wiki/favourites.xml] file in the [``userdata``][wiki/userdata] folder                                                                                                                             | ``${HOME}/.kodi/userdata/favourites.xml``       |
+| `tmpdir`      | `"#{ENV[TMPDIR] \|\| ::Dir.tmpdir}/KodiFavGen.#{Process.uid}"` | [``TMPDIR``][wikipedia/tmpdir] is the canonical environment variable in Unix and POSIX that should be used to specify a temporary directory (see [The Open Group Base Specifications][opengroup/directory_structure]). | ``/tmp/KodiFavGen.1000``                        |
+
+### ``update``
+
+| key             | defaults        | description                      | example                              |
+|-----------------|-----------------|----------------------------------|--------------------------------------|
+| `update_path`   | __MUST BE SET__ | path to `git` root directory     | ``${HOME}/.local/share/kodi_favgen`` |
+| `update_branch` | __MUST BE SET__ | branch used to update favourites | ``master``                           |
 
 ### Using variables in favourite files
 
@@ -99,3 +110,5 @@ action:
 [wikipedia/tmpdir]: https://en.wikipedia.org/wiki/TMPDIR
 [opengroup/directory_structure]: https://pubs.opengroup.org/onlinepubs/9699919799/xrat/V4_xbd_chap10.html
 [ruby/erb]: https://github.com/ruby/erb
+[SwagDevOps/kodi_favourites]: https://github.com/SwagDevOps/kodi_favourites
+[SwagDevOps/kodi_fav_gen/config/defaults.rb]: https://github.com/SwagDevOps/kodi_fav_gen/blob/master/lib/kodi_fav_gen/config/defaults.rb
