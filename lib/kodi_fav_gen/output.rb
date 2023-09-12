@@ -46,11 +46,10 @@ class KodiFavGen::Output
   # @return [KodiFavGen::Config]
   attr_reader :config
 
-  # Get file to write.
+  # Get the path to the writing file.
   #
   # @return [Pathname]
   def file
-    (config.get('output') || "#{ENV.fetch('HOME')}/#{DEFAULT_FILE}")
-      .yield_self { |fp| Pathname.new(fp) }
+    config.get(:output, exception: true) { Pathname.new(_1) }
   end
 end
