@@ -63,8 +63,8 @@ class KodiFavGen::Config
 
       payload.map(&:to_s).map do |data|
         parts = data.split('=')
-        [parts[0].to_s.tr('-', '_'), parts[1..-1]&.join('=')].map(&:to_s).then do |pair|
-          self.set(*pair) unless pair.map(&:empty?).include?(true)
+        [parts[0].to_s.gsub('.', '__').tr('-', '_'), parts[1..-1]&.join('=')].map(&:to_s).then do |pair|
+          self.set(*pair) unless pair.first.to_s.empty?
         end
       end.then { self.new }
     end
@@ -95,12 +95,13 @@ class KodiFavGen::Config
     # Set value for given key.
     #
     # @param [String] key
-    # @param [String, Integer, Boolean] value
+    # @param [String, Integer, Boolean, nil] value
     #
     # @return [String, nil]
-    def set(key, value)
+    def set(key, value = nil)
+      # noinspection RubyMismatchedReturnType
       self.key(key).then do |k|
-        ::ENV[k] = YAML::dump(value)
+        ::ENV[k] = value.nil? ? nil : YAML::dump(value.to_s)
       end
     end
 
