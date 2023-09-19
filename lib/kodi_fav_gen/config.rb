@@ -87,7 +87,7 @@ class KodiFavGen::Config
     def prepare(key, value)
       self.key(key).then do |k|
         (value.is_a?(Proc) ? value.call(self.new.to_h) : value).then do |v|
-          ::ENV[k] = YAML::dump(v.to_s).rstrip if !v.to_s.empty? and !::ENV.key?(k)
+          ::ENV[k] = YAML::dump(v.to_s).rstrip if !v.nil? and !::ENV.key?(k)
         end
       end
     end
